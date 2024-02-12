@@ -5,7 +5,7 @@ require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
 
-// const stripe = require('stripe')(process.env.STRIPE_SECRET_kEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_kEY);
 
 
 // middleware
@@ -100,7 +100,17 @@ async function run() {
 
         // review
         app.post('/customerReview/:id', async (req, res) => {
-            const result = await menusCollection.insertOne({ _id: new ObjectId(req.params.id) },);
+            const id = req.params.id
+            console.log(id)
+            const review = req.body;
+            const item = await menusCollection.findOne({ _id: new ObjectId(id) })
+            const exReview = item.customerReview
+            exReview.push(review);
+            const result = await menusCollection.updateOne({ _id: item._id }, {
+                $set: {
+                    customerReview: exReview
+                }
+            })
             res.send(result);
         })
 
@@ -117,21 +127,22 @@ async function run() {
 
 
         // payment intent
-        // app.post('/create-payment-intent', async (req, res) => {
-        //     const { price } = req.body;
-        //     const amount = parseInt(price * 100);
-        //     console.log(amount, 'amount inside the intent')
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            console.log("price some", price)
+            const amount = parseFloat(price) * 100
+            console.log(amount, 'amount inside the intent')
 
-        //     const paymentIntent = await stripe.paymentIntents.create({
-        //         amount: amount,
-        //         currency: 'usd',
-        //         payment_method_types: ['card'],
-        //     });
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card'],
+            });
 
-        //     res.send({
-        //         clientSecret: paymentIntent.client_secret,
-        //     })
-        // });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        });
 
 
 
