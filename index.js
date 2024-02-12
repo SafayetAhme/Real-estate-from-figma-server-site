@@ -5,6 +5,7 @@ require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
 
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_kEY);
 
 
 // middleware
@@ -35,6 +36,7 @@ async function run() {
         const projectsCollection = client.db("Real-estate-from-Figma").collection("projects");
         const usersCollection = client.db("Real-estate-from-Figma").collection("users");
         const addtoloveCollection = client.db("Real-estate-from-Figma").collection("addLove");
+        // const paymentCollection = client.db("Real-estate-from-Figma").collection("create-payment-intent");
 
 
 
@@ -96,6 +98,14 @@ async function run() {
             }
         })
 
+        // review
+        app.post('/customerReview/:id', async (req, res) => {
+            const result = await menusCollection.insertOne({ _id: new ObjectId(req.params.id) },);
+            res.send(result);
+        })
+
+
+
         // delete addlove data
         app.delete('/addLove/:id', async (req, res) => {
             const id = req.params.id;
@@ -103,6 +113,26 @@ async function run() {
             const result = await addtoloveCollection.deleteOne(query);
             res.send(result);
         })
+
+
+
+        // payment intent
+        // app.post('/create-payment-intent', async (req, res) => {
+        //     const { price } = req.body;
+        //     const amount = parseInt(price * 100);
+        //     console.log(amount, 'amount inside the intent')
+
+        //     const paymentIntent = await stripe.paymentIntents.create({
+        //         amount: amount,
+        //         currency: 'usd',
+        //         payment_method_types: ['card'],
+        //     });
+
+        //     res.send({
+        //         clientSecret: paymentIntent.client_secret,
+        //     })
+        // });
+
 
 
         // Send a ping to confirm a successful connection
