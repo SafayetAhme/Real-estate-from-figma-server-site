@@ -36,7 +36,7 @@ async function run() {
         const projectsCollection = client.db("Real-estate-from-Figma").collection("projects");
         const usersCollection = client.db("Real-estate-from-Figma").collection("users");
         const addtoloveCollection = client.db("Real-estate-from-Figma").collection("addLove");
-        // const paymentCollection = client.db("Real-estate-from-Figma").collection("create-payment-intent");
+        const paymentCollection = client.db("Real-estate-from-Figma").collection("payment");
 
 
 
@@ -70,6 +70,18 @@ async function run() {
             res.send(result);
         })
 
+        // get users data
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result);
+        })
+
+        // get payments data
+        app.get('/payment', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        })
+
         // post user data
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -98,7 +110,7 @@ async function run() {
             }
         })
 
-        // review
+        // post review
         app.post('/customerReview/:id', async (req, res) => {
             const id = req.params.id
             console.log(id)
@@ -115,15 +127,21 @@ async function run() {
         })
 
 
-
-        // delete addlove data
-        app.delete('/addLove/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await addtoloveCollection.deleteOne(query);
+        // post review for egent
+        app.post('/agentReview/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id)
+            const review = req.body;
+            const item = await agentsCollection.findOne({ _id: new ObjectId(id) })
+            const exReview = item?.customerReview;
+            exReview.push(review);
+            const result = await agentsCollection.updateOne({ _id: item._id }, {
+                $set: {
+                    customerReview: exReview
+                }
+            })
             res.send(result);
         })
-
 
 
         // payment intent
@@ -145,6 +163,21 @@ async function run() {
         });
 
 
+        // post paymenth information in data base
+        app.post('/payment', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await paymentCollection.insertOne(payment);
+            res.send(paymentResult);
+        })
+
+
+        // delete addlove data
+        app.delete('/addLove/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await addtoloveCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
